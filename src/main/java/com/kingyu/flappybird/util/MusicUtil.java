@@ -1,52 +1,94 @@
 package com.kingyu.flappybird.util;
 
-import java.io.FileInputStream;
+import javax.sound.sampled.*;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-
-import sun.audio.AudioPlayer;
-import sun.audio.AudioStream;
 
 /**
- * 音乐工具类
+ * 音乐工具类，支持播放 WAV 格式音频文件。
+ * <p>
+ * 示例用法：
+ * <pre>
+ *     MusicUtil.playFly();
+ *     MusicUtil.playCrash();
+ *     MusicUtil.playScore();
+ * </pre>
+ * </p>
  *
  * @author Kingyu
- * wav音频：JDK提供的类可直接解码 mp3音频：JDK没有提供支持，需要使用第三方的工具包
  */
 public class MusicUtil {
 
-    private static AudioStream fly;
-    private static AudioStream crash;
-    private static AudioStream score;
+    private static Clip flyClip;
+    private static Clip crashClip;
+    private static Clip scoreClip;
 
-    // wav播放
+    private MusicUtil() {
+        throw new UnsupportedOperationException("工具类不允许实例化");
+    }
+
+    /**
+     * 加载音频剪辑。
+     *
+     * @param filePath 音频文件路径
+     * @return Clip 对象，如果加载失败则返回 null
+     */
+    private static Clip loadAudioClip(String filePath) {
+        Clip clip = null;
+        try (AudioInputStream audioStream = AudioSystem.getAudioInputStream(new File(filePath))) {
+            AudioFormat format = audioStream.getFormat();
+            DataLine.Info info = new DataLine.Info(Clip.class, format);
+            clip = (Clip) AudioSystem.getLine(info);
+            clip.open(audioStream);
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            System.err.println("加载音频文件失败: " + filePath + "，错误信息: " + e.getMessage());
+        }
+        return clip;
+    }
+
+    /**
+     * 播放音频剪辑。
+     *
+     * @param clip Clip 对象
+     */
+    private static void playClip(Clip clip) {
+        if (clip == null) {
+            return;
+        }
+        if (clip.isRunning()) {
+            clip.stop();
+        }
+        clip.setFramePosition(0);
+        clip.start();
+    }
+
+    /**
+     * 播放飞行音效。
+     */
     public static void playFly() {
-        try {
-            // create an AudioStream from the InputStream
-            InputStream flyIn = new FileInputStream("resources/wav/fly.wav");
-            fly = new AudioStream(flyIn);
-        } catch (IOException ignored) {
+        if (flyClip == null) {
+            flyClip = loadAudioClip("resources/wav/fly.wav");
         }
-        AudioPlayer.player.start(fly);
+        playClip(flyClip);
     }
 
+    /**
+     * 播放碰撞音效。
+     */
     public static void playCrash() {
-        try {
-            // create an AudioStream from the InputStream
-            InputStream crashIn = new FileInputStream("resources/wav/crash.wav");
-            crash = new AudioStream(crashIn);
-        } catch (IOException ignored) {
+        if (crashClip == null) {
+            crashClip = loadAudioClip("resources/wav/crash.wav");
         }
-        AudioPlayer.player.start(crash);
+        playClip(crashClip);
     }
 
+    /**
+     * 播放得分音效。
+     */
     public static void playScore() {
-        try {
-            // create an AudioStream from the InputStream
-            InputStream scoreIn = new FileInputStream("resources/wav/score.wav");
-            score = new AudioStream(scoreIn);
-        } catch (IOException ignored) {
+        if (scoreClip == null) {
+            scoreClip = loadAudioClip("resources/wav/score.wav");
         }
-        AudioPlayer.player.start(score);
+        playClip(scoreClip);
     }
 }

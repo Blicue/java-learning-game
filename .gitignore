@@ -5,6 +5,10 @@ target/
 *.tar
 *.tar.gz
 
+# ±àÒëÊä³öÎÄ¼ş¼Ğ
+out/
+*.jar
+
 # eclipse ignore
 .settings/
 .project
